@@ -17,7 +17,7 @@ Definition barrierResume: val :=
   λ: "d", resume array_interface #(Z.of_nat 300) #true #false #false "d"
                  (λ: <>, #()) #().
 
-Definition await : val :=
+Definition arrive : val :=
   λ: "barrier",
   let: "counter" := Fst "barrier" in
   let: "e" := Fst (Snd "barrier") in
@@ -150,9 +150,9 @@ Proof.
   iDestruct "Hr" as "[% _]"; lia.
 Qed.
 
-Lemma await_spec γb γa γtq γe γd s:
+Lemma arrive_spec γb γa γtq γe γd s:
   {{{ is_barrier γb γa γtq γe γd s ∗ barrier_entry_piece γb }}}
-    await array_interface limit s
+    arrive array_interface limit s
   {{{ γf v, RET v; is_barrier_future γb γtq γa γf v ∗
                    thread_queue_future_cancellation_permit γf ∗
                    barrier_inhabitant_permit γb }}}.
@@ -366,7 +366,7 @@ Proof.
   iIntros "!> (HΦ & HCancHandle & HEntry)". wp_pures.
   iAssert (▷ cell_cancellation_handle _ _ _ _ _ _)%I
           with "[HCancHandle]" as "HCancHandle"; first done.
-  awp_apply (cancelCell_spec with "[] H↦~") without "Hv HΦ".
+  awp_apply (onCancelledCell_spec with "[] H↦~") without "Hv HΦ".
   by iDestruct "HTq" as "(_ & $ & _)".
   iAaccIntro with "HCancHandle". by iIntros "$".
   iIntros "#HCancelled !> [Hv HΦ]". wp_pures.

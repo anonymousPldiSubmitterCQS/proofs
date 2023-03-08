@@ -96,7 +96,7 @@ Definition cancellationHandler: val :=
     let: "cancellationAllowed" := "checkCancellation" #() in
     if: "cancellationAllowed" then
       let: "markResult" := getAndSet "cell" CANCELLEDV in
-      cancelCell array_interface "cellPtr" ;;
+      onCancelledCell array_interface "cellPtr" ;;
       match: "markResult" with
         InjR "v" => if: resume "maxWait" #true "mayBreakCells"
                               "waitForResolution" "deqIterator"
@@ -127,7 +127,7 @@ Definition tryCancelThreadQueueFuture': val :=
        let: "cellPtr" := Snd "f" in
        (if: "immediate" then
           let: "cell" := derefCellPointer array_interface "cellPtr" in
-          getAndSet "cell" CANCELLEDV ;; cancelCell array_interface "cellPtr"
+          getAndSet "cell" CANCELLEDV ;; onCancelledCell array_interface "cellPtr"
         else
           cancellationHandler "maxWait" "mayBreakCells" "waitForResolution"
                               "deqIterator" "checkCancellation"

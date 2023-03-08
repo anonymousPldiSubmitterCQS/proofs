@@ -47,9 +47,9 @@ Record listSpec Σ `{!heapG Σ}
                         [∗ list] i ∈ seq 0 k,
                             pointer_location γ (ℓ +ₗ (i: nat)) 0
         }}};
-      findSegment_spec N p γ γs' (start_id id: nat) v:
+      findSegm_spec N p γ γs' (start_id id: nat) v:
         {{{ is_concurrentLinkedList N p γ ∗ segment_in_list γ γs' start_id v }}}
-          findSegment impl v #id
+          findSegm impl v #id
         {{{ (v': val) (id': nat), RET (SOMEV v');
           (∃ γs, segment_in_list γ γs id' v')
           ∗ ⌜(start_id ≤ id' ∧ id ≤ id')%nat⌝

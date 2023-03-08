@@ -55,14 +55,14 @@ Section Segment.
 
 Variable impl: segmentInterface.
 
-Definition getIsRemoved: val :=
+Definition removed: val :=
   λ: "this", !(getCleanedAndPointersLoc impl "this") = #(maxSlots impl).
 
-Definition leftmostAliveNodeInternal: val :=
+Definition aliveSegmLeft: val :=
   λ: "this", (rec: "loop" "cur" :=
                 match: "cur" with
                   NONE => "cur"
-                | SOME "v" => if: getIsRemoved "v"
+                | SOME "v" => if: removed "v"
                               then "loop" (getPrev (base impl) "v")
                               else "cur"
                 end)%V (getPrev (base impl) "this").
@@ -73,30 +73,30 @@ Definition fromSome: val :=
              | InjR "v" => "v"
              end.
 
-Definition rightmostAliveNodeInternal: val :=
+Definition aliveSegmRight: val :=
   λ: "this", if: isTail (base impl) "this" then "undefined" else
                (rec: "loop" "cur" :=
-                  if: getIsRemoved "cur" && ~ isTail (base impl) "cur"
+                  if: removed "cur" && ~ isTail (base impl) "cur"
                   then "loop" (fromSome (getNext (base impl) "cur"))
                   else "cur")%V (fromSome (getNext (base impl) "this")).
 
 Definition remove: val :=
-  λ: "this", if: ~ getIsRemoved "this" then "undefined" else
+  λ: "this", if: ~ removed "this" then "undefined" else
                if: isTail (base impl) "this" then #() else
                  (rec: "loop" <> :=
-                    let: "prev" := leftmostAliveNodeInternal "this" in
-                    let: "next" := rightmostAliveNodeInternal "this" in
+                    let: "prev" := aliveSegmLeft "this" in
+                    let: "next" := aliveSegmRight "this" in
                     getPrevLoc (base impl) "next" <- "prev" ;;
                     (match: "prev" with
                        NONE => #()
                      | SOME "prev'" =>
                        getNextLoc (base impl) "prev'" <- SOME "next"
                      end) ;;
-                    if: getIsRemoved "next" && ~ isTail (base impl) "next"
+                    if: removed "next" && ~ isTail (base impl) "next"
                     then "loop" #()
                     else match: "prev" with
                            NONE => #()
-                         | SOME "prev'" => if: getIsRemoved "prev'"
+                         | SOME "prev'" => if: removed "prev'"
                                            then "loop" #()
                                            else #()
                          end) #().
@@ -113,10 +113,10 @@ Definition decPointers: val :=
   λ: "this", addAndGet (getCleanedAndPointersLoc impl "this")
                        #(-(1 ≪ pointerShift impl)) = #(maxSlots impl).
 
-Definition findSegmentInternal : val :=
+Definition findSegmInternal : val :=
   λ: "this" "id",
   (rec: "loop" "cur" :=
-     if: ("id" ≤ getId impl "cur") && ~ getIsRemoved "cur" then SOME "cur"
+     if: ("id" ≤ getId impl "cur") && ~ removed "cur" then SOME "cur"
      else match: !(getNextLoc (base impl) "cur") with
             InjL "v" => if: "v" = CLOSED
                         then NONEV
@@ -127,7 +127,7 @@ Definition findSegmentInternal : val :=
                                                    (SOME "cur")
                                                    #0%nat
                                in if: trySetNext (base impl) "cur" "newTail"
-                                  then (if: getIsRemoved "cur"
+                                  then (if: removed "cur"
                                         then remove "cur"
                                         else #()) ;;
                                        "loop" "newTail"
@@ -153,9 +153,9 @@ Definition moveForward : val :=
                                     "loop" #()
                           else #false) #().
 
-Definition findSegmentAndMoveForward : val :=
+Definition findAndMoveForward : val :=
   λ: "ptr" "id" "startFrom",
-  (rec: "loop" <> := match: findSegmentInternal "startFrom" "id" with
+  (rec: "loop" <> := match: findSegmInternal "startFrom" "id" with
                        NONE => NONE
                      | SOME "v" => if: moveForward "ptr" "v"
                                    then SOME "v"
@@ -174,7 +174,7 @@ Definition newList : val :=
 Canonical Structure list_impl: listInterface :=
   {| list_interfaces.newList := newList;
      list_interfaces.cleanPrev := cleanPrev (base impl);
-     list_interfaces.findSegment := findSegmentInternal;
+     list_interfaces.findSegm := findSegmInternal;
      list_interfaces.moveForward := moveForward;
      list_interfaces.onSlotCleaned := onSlotCleaned;
   |}.

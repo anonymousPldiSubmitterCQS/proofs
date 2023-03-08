@@ -233,7 +233,7 @@ Proof.
     iIntros "!> [HΦ HCancHandle]". wp_pures.
     iAssert (▷ cell_cancellation_handle _ _ _ _ _ _)%I
             with "[HCancHandle]" as "HCancHandle"; first done.
-    awp_apply (cancelCell_spec with "[] H↦~") without "Hv HΦ".
+    awp_apply (onCancelledCell_spec with "[] H↦~") without "Hv HΦ".
     by iDestruct "HTq" as "(_ & $ & _)".
     iAaccIntro with "HCancHandle". by iIntros "$".
     iIntros "#HCancelled !> [Hv HΦ]". wp_pures.

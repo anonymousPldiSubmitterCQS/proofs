@@ -48,11 +48,11 @@ Record infiniteArraySpec Σ `{!heapG Σ} (impl: infiniteArrayInterface) :=
                         [∗ list] i ∈ seq 0 k,
                           is_infinite_array_cutoff N γ #(ℓ +ₗ Z.of_nat i) 0
         }}};
-      cancelCell_spec N γ co p i:
+      onCancelledCell_spec N γ co p i:
         is_infinite_array N γ co -∗
         is_infinite_array_cell_pointer N γ p i -∗
         <<< ▷ cell_cancellation_handle N γ i >>>
-            cancelCell impl p @ ⊤ ∖ ↑N
+            onCancelledCell impl p @ ⊤ ∖ ↑N
         <<< ▷ cell_is_cancelled N γ i, RET #() >>>;
       findCell_spec N γ co p (source_id id: nat):
         {{{ is_infinite_array N γ co ∗

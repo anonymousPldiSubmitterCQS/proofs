@@ -354,10 +354,10 @@ Definition is_concurrentLinkedList (γ: gname): iProp :=
   inv N (concurrentLinkedList_invariant γ) ∗
   initialization_requirements _ _ segment_spec.
 
-Lemma getIsRemoved_spec (known_is_removed: bool) γ γs id v:
+Lemma removed_spec (known_is_removed: bool) γ γs id v:
   {{{ inv N (concurrentLinkedList_invariant γ) ∗ segment_in_list γ γs id v ∗
       if known_is_removed then segment_is_cancelled γ id else True }}}
-    getIsRemoved segment_interface v
+    removed segment_interface v
   {{{ (v: bool), RET #v; if v then segment_is_cancelled γ id
                               else ⌜known_is_removed = false⌝ }}}.
 Proof.
@@ -452,9 +452,9 @@ Proof.
     iApply "HΦ"; iModIntro; iRight. iExists pid, ptr. repeat iSplitR; done.
 Qed.
 
-Lemma leftmostAliveNodeInternal_spec γ γs id v:
+Lemma aliveSegmLeft_spec γ γs id v:
   {{{ inv N (concurrentLinkedList_invariant γ) ∗ segment_in_list γ γs id v }}}
-    leftmostAliveNodeInternal segment_interface v
+    aliveSegmLeft segment_interface v
   {{{ r, RET r; ⌜r = NONEV⌝ ∨
                 ∃ (id': nat) (v': val),
                   ⌜r = SOMEV v' ∧ (id' < id)%nat⌝ ∧
@@ -478,9 +478,9 @@ Proof.
       first by iIntros (i ?); destruct (decide (id ≤ i));
         [iApply "HCanc"|iApply "HCanc'"]; iPureIntro; lia.
     iClear "HCanc HCanc'".
-    wp_bind (getIsRemoved _ _).
+    wp_bind (removed _ _).
     iDestruct "HSeg'" as (?) "HSeg'".
-    iApply (getIsRemoved_spec false with "[$]").
+    iApply (removed_spec false with "[$]").
     iIntros (r) "!> Hr".
     destruct r.
     + wp_pures.
@@ -574,10 +574,10 @@ Proof.
     by iDestruct (later_segment_in_list_not_tail with "Hγs'") as "$".
 Qed.
 
-Lemma rightmostAliveNodeInternal_spec γ γs id v:
+Lemma aliveSegmRight_spec γ γs id v:
   {{{ inv N (concurrentLinkedList_invariant γ) ∗ segment_in_list γ γs id v ∗
       segment_is_not_tail γ id }}}
-    rightmostAliveNodeInternal segment_interface v
+    aliveSegmRight segment_interface v
   {{{ (id': nat) (v': val), RET v'; ⌜(id < id')%nat⌝ ∧
       (∃ γsn, segment_in_list γ γsn id' v') ∗
       ∀ i, ⌜id < i < id'⌝ -∗ segment_is_cancelled γ i
@@ -610,8 +610,8 @@ Proof.
   { iIntros (i Hi). destruct (decide (i ≤ current_id)%nat);
                       [iApply "HCanc"|iApply "HCanc'"]; iPureIntro; lia. }
 
-  wp_bind (getIsRemoved _ _). iDestruct "HNSeg" as (?) "HNSeg".
-  iApply (getIsRemoved_spec false with "[$]").
+  wp_bind (removed _ _). iDestruct "HNSeg" as (?) "HNSeg".
+  iApply (removed_spec false with "[$]").
   iIntros (r) "!> Hr".
   destruct r; wp_pures.
   2: {
@@ -640,7 +640,7 @@ Lemma remove_spec γ γs id v:
   {{{ RET #(); True }}}.
 Proof.
   iIntros (Φ) "(#HList & #HSeg & #HCanc) HΦ". iSpecialize ("HΦ" with "[//]").
-  wp_lam. wp_bind (getIsRemoved _ _). iApply (getIsRemoved_spec true with "[$]").
+  wp_lam. wp_bind (removed _ _). iApply (removed_spec true with "[$]").
   iIntros (r). destruct r; last by iIntros (?). iIntros "!> _". wp_pures.
   wp_bind (isTail _ _). iApply (isTail_spec false with "[$]").
   iIntros (r).
@@ -648,11 +648,11 @@ Proof.
   { iIntros "!> _". wp_pures. by iApply "HΦ". }
   iIntros "!> #HNotTail". wp_pures. iLöb as "IH".
 
-  wp_bind (leftmostAliveNodeInternal _ _).
-  iApply (leftmostAliveNodeInternal_spec with "[$]").
+  wp_bind (aliveSegmLeft _ _).
+  iApply (aliveSegmLeft_spec with "[$]").
   iIntros (prevv) "!> #HPrevVal". wp_pures.
-  wp_bind (rightmostAliveNodeInternal _ _).
-  iApply (rightmostAliveNodeInternal_spec with "[$]").
+  wp_bind (aliveSegmRight _ _).
+  iApply (aliveSegmRight_spec with "[$]").
   iIntros (nextId nextv) "!> #HNextVal".
   iDestruct "HNextVal" as (HIdLtNextId) "[HNSeg HNCanc]".
   iDestruct "HNSeg" as (γsn) "Hγsn".
@@ -730,11 +730,11 @@ Proof.
   }
 
   iIntros (?) "_ !>". wp_pures.
-  wp_bind (if: getIsRemoved _ _ then _ else _)%E.
+  wp_bind (if: removed _ _ then _ else _)%E.
   iApply (wp_strong_mono NotStuck _ ⊤ _ _ (fun v => ∃(b: bool), ⌜v = #b⌝)%I); [done|done| |].
   {
-    wp_bind (getIsRemoved _ _).
-    iApply (getIsRemoved_spec false with "[]").
+    wp_bind (removed _ _).
+    iApply (removed_spec false with "[]").
     by iFrame "HList"; iSplit; [iFrame "Hγsn HNextId HNextNode"|done].
     iIntros (r) "!> Hr".
     destruct r; wp_pures; last by iPureIntro; eauto.
@@ -744,9 +744,9 @@ Proof.
   iIntros (? [vv ->]) "!>". destruct vv; wp_pures. by iApply ("IH" with "HΦ").
   iDestruct "HPrevVal" as "[->|HPrevVal]"; first by wp_pures.
   iDestruct "HPrevVal" as (prevId prevv' [-> HLt]) "[HPSeg HPCanc]". wp_pures.
-  wp_bind (getIsRemoved _ _).
+  wp_bind (removed _ _).
   iDestruct "HPSeg" as (?) "HPSeg".
-  iApply (getIsRemoved_spec false with "[]"). by iFrame "HList HPSeg".
+  iApply (removed_spec false with "[]"). by iFrame "HList HPSeg".
   iIntros (r) "!> Hr'".
   destruct r; wp_pures; first by iApply ("IH" with "HΦ").
   iApply "HΦ".
@@ -910,9 +910,9 @@ Proof.
   - iPureIntro; lia.
 Qed.
 
-Theorem findSegmentInternal_spec γ γs' (start_id id: nat) v:
+Theorem findSegmInternal_spec γ γs' (start_id id: nat) v:
   {{{ is_concurrentLinkedList γ ∗ segment_in_list γ γs' start_id v }}}
-    findSegment (list_impl segment_interface) v #id
+    findSegm (list_impl segment_interface) v #id
   {{{ (v': val) (id': nat), RET (SOMEV v'); (∃ γs, segment_in_list γ γs id' v')
       ∗ ⌜(start_id ≤ id' ∧ id ≤ id')%nat⌝
       ∗ ∀ i, (⌜max start_id id ≤ i < id'⌝)%nat -∗ segment_is_cancelled γ i
@@ -949,7 +949,7 @@ Proof.
   {
     rewrite bool_decide_decide.
     destruct (decide _) as [HLe|HGt]; wp_pures.
-    - wp_apply (getIsRemoved_spec false); first by iFrame "Hγs'".
+    - wp_apply (removed_spec false); first by iFrame "Hγs'".
       iIntros (r).
       destruct r; [iIntros "#HIsCancelled"|iIntros "_"]; wp_pures.
       + iRight. iSplitR; first done.
@@ -1032,8 +1032,8 @@ Proof.
     iModIntro. iApply "HNewCancelled". iIntros (? ?); lia.
   }
 
-  wp_bind (getIsRemoved _ _).
-  iApply (getIsRemoved_spec false with "[]"); first by iFrame "HList Hγs'".
+  wp_bind (removed _ _).
+  iApply (removed_spec false with "[]"); first by iFrame "HList Hγs'".
   iIntros (isRemoved) "!> HIsRemoved".
   destruct (isRemoved); wp_pures; last done.
   iApply (remove_spec with "[$]"). done.
@@ -1804,7 +1804,7 @@ Canonical Structure list_impl `{!heapG Σ}
           {impl: segmentInterface} (segment_spec: segmentSpec Σ impl)
           `{!iLinkedListG segment_spec Σ} :=
   {|
-     list_spec.findSegment_spec := findSegmentInternal_spec segment_spec;
+     list_spec.findSegm_spec := findSegmInternal_spec segment_spec;
      list_spec.moveForward_spec := moveForward_spec segment_spec;
      list_spec.cleanPrev_spec := cleanPrev_spec segment_spec;
      list_spec.access_segment := access_segment segment_spec;

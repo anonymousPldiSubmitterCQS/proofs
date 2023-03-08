@@ -18,14 +18,14 @@ Definition fromSome: val :=
 Definition getIdImpl := getId (SQSegment segment_size pointer_shift).
 
 Definition InfiniteArray :=
-  {| array_interfaces.cancelCell :=
+  {| array_interfaces.onCancelledCell :=
        λ: "ptr", onSlotCleaned list_impl (Fst "ptr");
      array_interfaces.newInfiniteArray := newList list_impl;
      array_interfaces.findCell :=
        λ: "ptr" "id",
        let: "sid" := "id" `quot` #(Pos.to_nat segment_size) in
        let: "cid" := "id" `rem` #(Pos.to_nat segment_size) in
-       let: "seg" := fromSome (findSegment list_impl "ptr" "sid") in
+       let: "seg" := fromSome (findSegm list_impl "ptr" "sid") in
        if: getIdImpl "seg" = "sid"
        then ("seg", "cid")
        else ("seg", #0);

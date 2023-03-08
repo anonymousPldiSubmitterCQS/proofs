@@ -4,7 +4,7 @@ Record listInterface :=
   ListInterface {
       newList: val;
       cleanPrev: val;
-      findSegment: val;
+      findSegm: val;
       moveForward: val;
       onSlotCleaned: val;
     }.

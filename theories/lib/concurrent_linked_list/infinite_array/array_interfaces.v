@@ -3,7 +3,7 @@ From iris.heap_lang Require Export notation.
 Record infiniteArrayInterface :=
   InfiniteArrayInterface {
       newInfiniteArray: val;
-      cancelCell: val;
+      onCancelledCell: val;
       findCell: val;
       derefCellPointer: val;
       cutoffMoveForward: val;

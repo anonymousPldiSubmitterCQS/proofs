@@ -157,11 +157,11 @@ Proof.
   simplify_eq. iFrame.
 Qed.
 
-Theorem cancelCell_spec γ co p i:
+Theorem onCancelledCell_spec γ co p i:
   is_infinite_array γ co -∗
   is_infinite_array_cell_pointer γ p i -∗
   <<< ▷ cell_cancellation_handle' γ i >>>
-  cancelCell array_impl p @ ⊤ ∖ ↑N
+  onCancelledCell array_impl p @ ⊤ ∖ ↑N
   <<< ▷ cell_is_cancelled' γ i, RET #() >>>.
 Proof.
   iIntros "#HArr #HCellPointer" (Φ) "AU". wp_lam.
@@ -220,9 +220,9 @@ Proof.
   iIntros (Φ) "[#HArr #HCellPointer] HΦ".
   iDestruct "HCellPointer" as (?) "[#HInList _]".
 
-  wp_lam. wp_pures. wp_bind (findSegment _ _ _).
+  wp_lam. wp_pures. wp_bind (findSegm _ _ _).
   rewrite quot_of_nat /is_infinite_array.
-  iApply (findSegment_spec with "[]"); first by iFrame "HInList HArr".
+  iApply (findSegm_spec with "[]"); first by iFrame "HInList HArr".
   iIntros (v' id') "!> HResult".
   iDestruct "HResult" as "(HInList' & HFound & #HCancelled)".
   iDestruct "HFound" as %HFound. iDestruct "HInList'" as (γs') "#HInList'".
@@ -530,7 +530,7 @@ Canonical Structure array_impl
   {|
   array_spec.newInfiniteArray_spec := newInfiniteArray_spec segment_size pointer_shift limit list_impl list_spec;
   array_spec.findCell_spec := findCell_spec segment_size pointer_shift limit list_impl list_spec;
-  array_spec.cancelCell_spec := cancelCell_spec segment_size pointer_shift limit list_impl list_spec;
+  array_spec.onCancelledCell_spec := onCancelledCell_spec segment_size pointer_shift limit list_impl list_spec;
   array_spec.derefCellPointer_spec := derefCellPointer_spec segment_size pointer_shift limit list_impl list_spec;
   array_spec.cutoffMoveForward_spec := cutoffMoveForward_spec segment_size pointer_shift limit list_impl list_spec;
   array_spec.cutoffGetPointer_spec := cutoffGetPointer_spec segment_size pointer_shift limit list_impl list_spec;
