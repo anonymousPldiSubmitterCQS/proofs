@@ -20,6 +20,10 @@ Iris. This version is
 [pinned](https://gitlab.mpi-sws.org/iris/iris/-/wikis/Pinned-Iris-package-versions)
 and so won't be removed from the opam repository.
 
+Versions of other relevant packages:
+* `coq`: `8.11.0`
+* `coq-stdpp`: `dev.2020-08-07.0.67db2f24`
+
 After Iris is installed and the toolchain of Coq is in `$PATH`, run
 ```sh
 coq_makefile -f _CoqProject -o Makefile.coq.local
